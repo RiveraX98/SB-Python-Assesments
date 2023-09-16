@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template,flash
+from flask import Flask, redirect, render_template, flash
 from flask_debugtoolbar import DebugToolbarExtension
 
 from models import db, connect_db, Playlist, Song, PlaylistSong
@@ -13,7 +13,6 @@ app.config['SQLALCHEMY_ECHO'] = True
 app.config['SECRET_KEY'] = "Keyabc123"
 
 
-
 connect_db(app)
 db.create_all()
 debug = DebugToolbarExtension(app)
@@ -25,12 +24,9 @@ debug = DebugToolbarExtension(app)
 # app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
 
-
-
 @app.route("/")
 def root():
     """Homepage: redirect to /playlists."""
-    
 
     return redirect("/playlists")
 
@@ -52,7 +48,7 @@ def show_playlist(playlist_id):
     """Show detail on specific playlist."""
     playlist = Playlist.query.get_or_404(playlist_id)
 
-    return render_template("playlist.html", playlist= playlist)
+    return render_template("playlist.html", playlist=playlist)
 
 
 @app.route("/playlists/add", methods=["GET", "POST"])
@@ -64,19 +60,17 @@ def add_playlist():
     """
 
     # ADD THE NECESSARY CODE HERE FOR THIS ROUTE TO WORK
-    form=PlaylistForm()
+    form = PlaylistForm()
     if form.validate_on_submit():
         name = form.name.data
-        description= form.description.data
-        new_playlist = Playlist(name=name, description= description)
+        description = form.description.data
+        new_playlist = Playlist(name=name, description=description)
         db.session.add(new_playlist)
         db.session.commit()
         flash("playlist added successfully", "success")
         return redirect("/playlists")
     else:
-        return render_template("new_playlist.html", form = form)
-
-
+        return render_template("new_playlist.html", form=form)
 
 
 ##############################################################################
@@ -95,7 +89,7 @@ def show_all_songs():
 def show_song(song_id):
     """return a specific song"""
     song = Song.query.get_or_404(song_id)
-    return render_template("song.html", song=song )
+    return render_template("song.html", song=song)
 
     # ADD THE NECESSARY CODE HERE FOR THIS ROUTE TO WORK
 
@@ -113,52 +107,61 @@ def add_song():
     if form.validate_on_submit():
         artist = form.artist.data
         title = form.title.data
-        new_song= Song(artist=artist, title=title)
+        new_song = Song(artist=artist, title=title)
         db.session.add(new_song)
         db.session.commit()
-        song= Song.query.filter_by(title=title, artist=artist).first()
+        song = Song.query.filter_by(title=title, artist=artist).first()
         flash("song added successfully", "success")
         return redirect(f"/songs/{song.id}")
     else:
         return render_template("new_song.html", form=form)
 
 
+# @app.route("/playlists/<int:playlist_id>/list_songs")
+# def show_playlist_page(playlist_id):
+#     """Add a playlist and redirect to list."""
+#     print('show list of songs')
+#     playlist = Playlist.query.get_or_404(playlist_id)
 
-@app.route("/playlists/<int:playlist_id>/add_song", methods=["GET", "POST"])
-def show_playlist_page(playlist_id):
-    """Add a playlist and redirect to list."""
+#     form = NewSongForPlaylistForm()
 
-  
+#     curr_on_playlist = [song.id for song in playlist.songs]
+#     choices = db.session.query(Song.title).filter(Song.id.notin_(curr_on_playlist)).all()
     
+#     form.song.choices = []
+#     for song in choices:
+#         form.song.choices.append(" ".join(song))
+        
+   
+
+#     return render_template("add_song_to_playlist.html", playlist=playlist, form=form, songs=form.song.choices)
+
+
+
+@app.route("/playlists/<int:playlist_id>/list_songs", methods=["GET","POST"])
+def add_song_to_playlist(playlist_id):
+    """Add a playlist and redirect to list."""
     playlist = Playlist.query.get_or_404(playlist_id)
 
     form = NewSongForPlaylistForm()
-    
 
     curr_on_playlist = [song.id for song in playlist.songs]
-    form.song.choices = db.session.query(Song.id, Song.title).filter(Song.id.notin_(curr_on_playlist)).all()
+    choices = db.session.query(Song.title).filter(Song.id.notin_(curr_on_playlist)).all()
+    
+    form.song.choices = []
+    for song in choices:
+        form.song.choices.append(" ".join(song))
+    
 
     if form.validate_on_submit():
-          song= form.song.data
-          new_playlistSong=PlaylistSong(playlist_id =None,song_id=song)
-          db.session.add(new_playlistSong)
-          db.session.commit()
-          flash("Song added to playlists", "success")
+        chosen_song = form.song.data
+        song= Song.query.filter_by(title=chosen_song).first()
 
-          return redirect(f"/playlists/{playlist_id}")
+        new_playlistSong = PlaylistSong(playlist_id=playlist_id, song_id=song.id)
+        db.session.add(new_playlistSong)
+        db.session.commit()
+        flash("Song added to playlists", "success")
 
-    return render_template("add_song_to_playlist.html", playlist=playlist,form=form)
+        return redirect(f"/playlists/{playlist_id}")
 
-
-
-# @app.route("/playlists/<int:playlist_id>/add-song", methods= ["POST"])
-# def add_song_to_playlist(playlist_id):
-#         form = NewSongForPlaylistForm()
-#         form.validate_on_submit()
-#         song= form.song.data
-#         new_playlistSong=PlaylistSong(playlist_id =None,song_id=song)
-#         db.session.add(new_playlistSong)
-#         db.session.commit()
-#         # flash("Song added to playlists", "success")
-
-#         # return redirect(f"/playlists/{playlist_id}")
+    return render_template("add_song_to_playlist.html", playlist=playlist, form=form, songs=form.song.choices)

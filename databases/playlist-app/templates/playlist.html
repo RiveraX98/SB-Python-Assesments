@@ -9,13 +9,14 @@
   {% endif %}
 </div>
 
-
+<p>Songs:</p>
 <div class="text-danger">
   <ul>
     
     {%for song in playlist.songs%}
-    <li>{{song.title}}</li>
-      
+    <li>
+      <a href="/songs/{{ song.id }}">{{ song.title }}</a>
+   </li>
     {%endfor%}
     
   </ul>
@@ -27,7 +28,7 @@
   </a>
 </p> -->
 
-<form action="/playlists/{{playlist.id}}/add_song" method="POST">
+<form action="/playlists/{{playlist.id}}/list_songs" method="GET">
   <button>Add Song To Playlist</button>
 </form>
 

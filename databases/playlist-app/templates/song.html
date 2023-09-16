@@ -7,11 +7,11 @@
   <p class="lead"> {{ song.artist }}</p>
 </div>
 
-
+<p>Appears in playlists:</p>
 {%for playlist in song.playlists%}
 <ul>
   <li>
-  <a href="/playlists">{{playlist}}</a>
+  <a href="/playlists">{{playlist.name}}</a>
 </li>
 </ul>
 {%endfor%}
